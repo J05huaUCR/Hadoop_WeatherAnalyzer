@@ -3,7 +3,7 @@ package weatherAnalyzerPackage;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Mapper.Context;
+//import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import java.io.IOException;
@@ -43,17 +43,17 @@ public class MapperForJoin extends Mapper<LongWritable, Text, AnchorKey, Text> {
         switch (tokenNumber) {
           case 0: // Key
             tempKey += tokenString.replaceAll("\"", ""); // Strip Quotes
-            //tempValue += "{\"KEY\":\"" + tempKey + "\"";
+            tempValue += "{\"USAF\":\"" + tempKey + "\"";
             break;
 
           case 1:
             tempKey += "-" + tokenString.replaceAll("\"", ""); // Strip Quotes
-           // tempValue += "{\"WBAN\":\"" + tokenString.replaceAll("\"", "") + "\"";
+            tempValue += ",\"WBAN\":\"" + tokenString.replaceAll("\"", "") + "\"";
             break;
 
           case 2:
             tempValue +=
-                "{\"STATION NAME\":\"" + tokenString.replaceAll("\"", "")
+                "\"STATION NAME\":\"" + tokenString.replaceAll("\"", "")
                     + "\"";
             break;
 
