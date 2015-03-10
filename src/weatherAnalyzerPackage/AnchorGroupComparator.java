@@ -16,4 +16,3 @@ public class AnchorGroupComparator extends WritableComparator {
     return anchorKey1.getJoinKey().compareTo(anchorKey2.getJoinKey());
   }
 }
-

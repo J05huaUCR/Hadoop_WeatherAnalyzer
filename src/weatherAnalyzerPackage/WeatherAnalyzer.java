@@ -65,7 +65,9 @@ public class WeatherAnalyzer {
       config.set(readingsFileNames.get(i), Integer.toString(i+2)); // add file name and set order
       filePaths.append(readingsDir + "/" + readingsFileNames.get(0)).append(",");
     }
-     
+     /*
+      * Maps stations and readings, filtering data as necessary and then joining
+      */
     filePaths.setLength(filePaths.length() - 1);
     Job job = new Job(config, "WeatherAnalyzer");
     job.setJarByClass(WeatherAnalyzer.class);
@@ -80,6 +82,14 @@ public class WeatherAnalyzer {
     job.setOutputKeyClass(AnchorKey.class);
     job.setOutputValueClass(Text.class);
     System.exit(job.waitForCompletion(true) ? 0 : 1);
+    
+    /*
+     * Map results from previous run to consolidate by state, year/month, 
+     * eliminating non-US results at this time
+     * reduce to max/min values per month
+     */
+    
+    
 
   }
 }
