@@ -6,13 +6,16 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.json.simple.JSONObject;
+
+
+
+
+//import MapReduce.SortByKeyMapper;
+//import MapReduce.SortByKeyReducer;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-
 
 /**
 * http://codingjunkie.net/mapreduce-reduce-joins/
@@ -94,9 +97,10 @@ public class WeatherAnalyzer {
     Configuration config = new Configuration();
     
     // Vars to hold parameter info
-    String readingsDir,stationsDir, joinDir, outputDir;
+    String readingsDir,stationsDir, joinDir, mapUSDir, outputDir;
     readingsDir = stationsDir = "";
     joinDir = "output_join";
+    mapUSDir = "output_us_data";
     outputDir = "output"; // Set as Default
     StringBuilder filePaths = new StringBuilder();
     
@@ -146,12 +150,14 @@ public class WeatherAnalyzer {
     
     filePaths.setLength(filePaths.length() - 1);
     
+    
     /*
      * Define ReduceJoin job
-     */
+     * 
+    */
     Job joinDataSets = new Job(config, "Join");
     joinDataSets.setJarByClass(WeatherAnalyzer.class);
-
+    
     FileInputFormat.addInputPaths(joinDataSets, filePaths.toString());
     FileOutputFormat.setOutputPath(joinDataSets, new Path(joinDir));
 
@@ -162,19 +168,18 @@ public class WeatherAnalyzer {
     joinDataSets.setOutputKeyClass(AnchorKey.class);
     joinDataSets.setOutputValueClass(Text.class);
     if ( joinDataSets.waitForCompletion(true) ) {
-    	System.out.print("Done.");
-    	System.exit(0);
+    	System.out.print("Join Done.\n");
     } else {
-    	System.err.print("Something went horribly wrong...");
-    	System.exit(1);
+    	System.err.print("Something went horribly wrong...\n");
     }
-    // System.exit(job.waitForCompletion(true) ? 0 : 1);
+    System.exit(joinDataSets.waitForCompletion(true) ? 0 : 1);
+     
     
     /*
      * Map results from previous run to consolidate by state, year/month, 
      * eliminating non-US results at this time
      * reduce to max/min values per month
-     */
+    */
     
     // get list of joinedData files
     File dataSet = new File(joinDir);
@@ -188,10 +193,32 @@ public class WeatherAnalyzer {
     
     // remove last comma
     filePaths.setLength(filePaths.length() - 1);
+     
     
+    /*
+     * Define Mapping data to US and Month, Reducing to State and Avg max/min for each month
+     */
     Job getUSdata = new Job(config,"USdata");
+    getUSdata.setJarByClass(WeatherAnalyzer.class);
     
-
+    // Set data paths
+    FileInputFormat.addInputPaths(getUSdata, filePaths.toString());
+    FileOutputFormat.setOutputPath(getUSdata, new Path(mapUSDir));
+    
+    // Configure Job
+    getUSdata.setMapperClass(MapperUSdata.class);
+    getUSdata.setReducerClass(ReducerUSdata.class);
+    getUSdata.setOutputKeyClass(Text.class);
+    getUSdata.setOutputValueClass(Text.class);
+    
+    // Fire Job
+    if ( getUSdata.waitForCompletion(true) ) {
+      System.out.print("Map/Reduce US Data Done.\n");
+      System.exit(0);
+    } else {
+      System.err.print("Something went horribly wrong...\n");
+      System.exit(1);
+    }
   }
 }
 
