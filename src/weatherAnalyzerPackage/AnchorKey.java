@@ -56,5 +56,4 @@ public class AnchorKey implements Writable, WritableComparable<AnchorKey> {
   public IntWritable getTag() {
       return tag;
   }
-
 }
