@@ -33,8 +33,7 @@ public class ReducerForJoin extends Reducer<AnchorKey, Text, NullWritable, Text>
        * STATION NAME,CTRY,STATE,LAT,LON,ELEV,BEGIN,END,YEARMODA,TEMP,MAX,MIN,PRCP
        */
       for (Text value : values) {
-        
-
+        //System.out.println("RECORD COMING IN:" + value.toString());
         // Create Temporary JSON
         Object tempParseObj = JSONValue.parse( value.toString() );
         JSONArray tempValuesArray=(JSONArray)tempParseObj;
@@ -42,7 +41,7 @@ public class ReducerForJoin extends Reducer<AnchorKey, Text, NullWritable, Text>
         tempValueObj=(JSONObject)tempValuesArray.get(0);
        
         
-        if (tempValueObj.size() > 4) { // Station
+        if (tempValueObj.size() > 5) { // Station
           // update station data in output object
           outputJSONObj.put("STATION NAME", tempValueObj.get("STATION NAME"));
           outputJSONObj.put("CTRY", tempValueObj.get("CTRY"));
@@ -52,6 +51,7 @@ public class ReducerForJoin extends Reducer<AnchorKey, Text, NullWritable, Text>
           outputJSONObj.put("ELEV", tempValueObj.get("ELEV"));
           outputJSONObj.put("BEGIN", tempValueObj.get("BEGIN"));
           outputJSONObj.put("END", tempValueObj.get("END"));
+          //System.out.println("UPDATED STATION:" + outputJSONObj.toString());
         } else { // readings
           // Update readings in output object
           outputJSONObj.put("YEARMODA", tempValueObj.get("YEARMODA"));
@@ -59,11 +59,13 @@ public class ReducerForJoin extends Reducer<AnchorKey, Text, NullWritable, Text>
           outputJSONObj.put("MAX", tempValueObj.get("MAX"));
           outputJSONObj.put("MIN", tempValueObj.get("MIN"));
           outputJSONObj.put("PRCP", tempValueObj.get("PRCP"));
+          //System.out.println("UPDATED RECORD:" + outputJSONObj.toString());
         }
         
         // Emit results
-        tempValuesArray.set(0, outputJSONObj);
-        joinedText.set(keyPassedIn + "," + tempValuesArray.toString());
+        outputJSONData.set(0, outputJSONObj);
+       // System.out.println("RECORD OUTPUT:" + outputJSONObj.toString());
+        joinedText.set(keyPassedIn + "," + outputJSONData.toString());
         context.write(nullKey, joinedText);
         
      }

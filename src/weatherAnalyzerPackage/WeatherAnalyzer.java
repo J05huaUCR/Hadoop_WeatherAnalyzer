@@ -1,10 +1,7 @@
 package weatherAnalyzerPackage;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -232,14 +229,14 @@ public class WeatherAnalyzer {
     }
     
     // clear previous passes if present
-    //deleteDirectory(joinDir);
+    deleteDirectory(joinDir);
     deleteDirectory(mapUSDir);
     deleteDirectory(outputDir);
     
     /*
      * Define ReduceJoin job
      * Maps stations and readings, filtering data as necessary and then joining
-    
+    */
     
     // get list of station files 
     StringBuilder filePaths = new StringBuilder();
@@ -279,7 +276,7 @@ public class WeatherAnalyzer {
     } else {
       System.err.print("Something went horribly wrong...\n");
     }
-     */
+     
     
     
     /*

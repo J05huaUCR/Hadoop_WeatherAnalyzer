@@ -37,7 +37,15 @@ public class MapperUSdata extends Mapper<LongWritable, Text, Text, Text> {
       //String stnID = (String) obj.get("STN");
       //String wban = (String) obj.get("WBAN");
       String state = (String) obj.get("STATE");
+      if (state.isEmpty() ) {
+        state = "XX";
+      }
       String month = (String) obj.get("YEARMODA");
+      if (!month.isEmpty()) {
+        month = month.substring(4,6);
+      } else {
+        month = "00";
+      }
       
       // Check for state
       if (state == null || month == null) {

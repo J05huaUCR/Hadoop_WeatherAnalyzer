@@ -132,12 +132,15 @@ public class MapperForJoin extends Mapper<LongWritable, Text, AnchorKey, Text> {
       jsonData.put("MAX", valuesResult[17]);
       jsonData.put("MIN", valuesResult[18]);
       jsonData.put("PRCP", valuesResult[19]);
+   
+      //System.out.println("MAP RECORD:" + jsonData.toJSONString());
     } 
     
     /* Create JSON Array to hold JSON object and output as string */
     JSONArray jsonArray = new JSONArray();
     jsonArray.add(jsonData);
     String jsonStringOutput = jsonArray.toJSONString();
+    //System.out.println("MAP RECORD:" + jsonStringOutput);
     
     data.set(jsonStringOutput); // set data = to compiled data as String
     taggedKey.set(tempKey,joinOrder);
