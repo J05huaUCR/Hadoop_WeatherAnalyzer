@@ -202,10 +202,11 @@ public class WeatherAnalyzer {
     Configuration config = new Configuration();
        
     // Vars to hold parameter info
-    String readingsDir,stationsDir, joinDir, mapUSDir, outputDir;
+    String readingsDir,stationsDir, joinDir, mapUSDir, mapStateDir, outputDir;
     readingsDir = stationsDir = "";
     joinDir = "output_join";
     mapUSDir = "output_us_data";
+    mapStateDir = "output_state_data";
     outputDir = "output"; // Set as Default
     
     
@@ -229,14 +230,15 @@ public class WeatherAnalyzer {
     }
     
     // clear previous passes if present
-    deleteDirectory(joinDir);
-    deleteDirectory(mapUSDir);
+    //deleteDirectory(joinDir);
+    //deleteDirectory(mapUSDir);
+    deleteDirectory(mapStateDir);
     deleteDirectory(outputDir);
     
     /*
      * Define ReduceJoin job
      * Maps stations and readings, filtering data as necessary and then joining
-    */
+    
     
     // get list of station files 
     StringBuilder filePaths = new StringBuilder();
@@ -276,120 +278,92 @@ public class WeatherAnalyzer {
     } else {
       System.err.print("Something went horribly wrong...\n");
     }
-     
+    */
     
+    /*
+     * Map results from previous run to consolidate by state, year/month, 
+     * eliminating non-US results at this time
+     * reduce to max/min values per month
+    
+    Configuration getStateDataConf = new Configuration();
+    Job getStateData = new Job(getStateDataConf, "Get States' data");
+    getStateData.setJarByClass(WeatherAnalyzer.class);
+
+    getStateData.setMapperClass(MapperUSdata.class);
+    getStateData.setReducerClass(ReducerUSdata.class);
+
+    getStateData.setOutputKeyClass(Text.class);
+    getStateData.setOutputValueClass(Text.class);
+
+    getStateData.setInputFormatClass(TextInputFormat.class);
+    getStateData.setOutputFormatClass(TextOutputFormat.class);
+
+    TextInputFormat.addInputPath(getStateData, new Path(joinDir));
+    TextOutputFormat.setOutputPath(getStateData, new Path(mapUSDir));
+
+    // Run Job
+    if ( getStateData.waitForCompletion(true) ) {
+      System.out.println("getStatesData Done.");
+    } else {
+      System.err.println("Something went horribly wrong...");
+    }
+    */
     
     /*
      * Map results from previous run to consolidate by state, year/month, 
      * eliminating non-US results at this time
      * reduce to max/min values per month
     */
-    Configuration conf2 = new Configuration();
-    //Configuration conf2 = getConf();
-    Job job2 = new Job(conf2, "Job 2");
-    job2.setJarByClass(WeatherAnalyzer.class);
+    Configuration compileDataConf = new Configuration();
+    Job compileData = new Job(compileDataConf, "Get States data");
+    compileData.setJarByClass(WeatherAnalyzer.class);
 
-    job2.setMapperClass(MapperUSdata.class);
-    job2.setReducerClass(ReducerUSdata.class);
+    compileData.setMapperClass(MapStateData.class);
+    compileData.setReducerClass(ReduceStateData.class);
 
-    job2.setOutputKeyClass(Text.class);
-    job2.setOutputValueClass(Text.class);
+    compileData.setOutputKeyClass(Text.class);
+    compileData.setOutputValueClass(Text.class);
 
-    job2.setInputFormatClass(TextInputFormat.class);
-    job2.setOutputFormatClass(TextOutputFormat.class);
+    compileData.setInputFormatClass(TextInputFormat.class);
+    compileData.setOutputFormatClass(TextOutputFormat.class);
+    //compileData.setSortComparatorClass(Text.class);
 
-    TextInputFormat.addInputPath(job2, new Path(joinDir));
-    TextOutputFormat.setOutputPath(job2, new Path(mapUSDir));
+    TextInputFormat.addInputPath(compileData, new Path(mapUSDir));
+    TextOutputFormat.setOutputPath(compileData, new Path(mapStateDir));
 
-    job2.waitForCompletion(true);
-    /*
-    Configuration job2config = new Configuration();
-    StringBuilder joinPaths = new StringBuilder();
-    
-    // get list of joined US Data file
-    File usData = new File(joinDir);
-    ArrayList<String> joinedData = new ArrayList<String>(Arrays.asList(usData.list()));
-    
-    // Add station files to paths
-    String joinedDataFilname = joinedData.get(0);
-    job2config.set(joinedDataFilname, "1"); // add file name and set order
-    joinPaths.append(joinDir + "/" + joinedDataFilname);     
-      
-    
-     * Define Mapping data to US and Month, Reducing to State and Avg max/min for each month
-     
-    
-    Job getUSdata = new Job(job2config,"USdata");
-    getUSdata.setJarByClass(WeatherAnalyzer.class);
-    
-    System.out.println("INPUT PATH: | " + joinDir + " |");
-    System.out.println("OUTPUT PATH: | " + mapUSDir + " |");
-    
-    // Set data paths
-    FileInputFormat.addInputPaths(getUSdata, joinDir);
-    FileOutputFormat.setOutputPath(getUSdata, new Path(mapUSDir));
-        
-    // Configure Job
-    System.out.println("Defining MapperUSdata");
-    getUSdata.setMapperClass(MapperUSdata.class);
-    System.out.println("Defining ReducerUSdata");
-    getUSdata.setReducerClass(ReducerUSdata.class);
-    System.out.println("Setting Output Key");
-    getUSdata.setOutputKeyClass(Text.class);
-    System.out.println("Setting Output Value");
-    getUSdata.setOutputValueClass(Text.class);
-    
-    // Fire Job
-    if ( getUSdata.waitForCompletion(true) ) {
-      System.out.print("Map/Reduce US Data Done.\n");
-      System.exit(0);
+    // Run Job
+    if ( compileData.waitForCompletion(true) ) {
+      System.out.println("compileData Done.");
     } else {
-      System.err.print("Something went horribly wrong...\n");
-      System.exit(1);
-    }   
-    */
+      System.err.println("Something went horribly wrong...");
+    }
+    
     
     /*
-     * Job 1
-     
-    Configuration conf = getConf();
-    FileSystem fs = FileSystem.get(conf);
-    Job job = new Job(conf, "Job1");
-    job.setJarByClass(WeatherAnalyzer.class);
+     * Take output State data, map on temp difference and output results
+    */
+    Configuration outputResulstsConf = new Configuration();
+    Job outputResults = new Job(outputResulstsConf, "Output results");
+    outputResults.setJarByClass(WeatherAnalyzer.class);
 
-    job.setMapperClass(MapperUSdata.class);
-    job.setReducerClass(ReducerUSdata.class);
+    outputResults.setMapperClass(MapperOutResults.class);
+    outputResults.setReducerClass(ReducerOutResults.class);
 
-    job.setOutputKeyClass(Text.class);
-    job.setOutputValueClass(Text.class);
+    outputResults.setOutputKeyClass(Text.class);
+    outputResults.setOutputValueClass(Text.class);
 
-    job.setInputFormatClass(TextInputFormat.class);
-    job.setOutputFormatClass(TextOutputFormat.class);
+    outputResults.setInputFormatClass(TextInputFormat.class);
+    outputResults.setOutputFormatClass(TextOutputFormat.class);
 
-    TextInputFormat.addInputPath(job, new Path(args[0]));
-    TextOutputFormat.setOutputPath(job, new Path(OUTPUT_PATH));
+    TextInputFormat.addInputPath(outputResults, new Path(mapStateDir));
+    TextOutputFormat.setOutputPath(outputResults, new Path(outputDir));
 
-    job.waitForCompletion(true);
-*/
-    /*
-     * Job 2
-     
-    Configuration conf2 = getConf();
-    Job job2 = new Job(conf2, "Job 2");
-    job2.setJarByClass(ChainJobs.class);
+    // Run Job
+    if ( outputResults.waitForCompletion(true) ) {
+      System.out.println("outputResulstsConf Done.");
+    } else {
+      System.err.println("Something went horribly wrong...");
+    }
 
-    job2.setMapperClass(MyMapper2.class);
-    job2.setReducerClass(MyReducer2.class);
-
-    job2.setOutputKeyClass(Text.class);
-    job2.setOutputValueClass(Text.class);
-
-    job2.setInputFormatClass(TextInputFormat.class);
-    job2.setOutputFormatClass(TextOutputFormat.class);
-
-    TextInputFormat.addInputPath(job2, new Path(OUTPUT_PATH));
-    TextOutputFormat.setOutputPath(job2, new Path(args[1]));
-
-    job2.waitForCompletion(true) ? 0 : 1;*/
   }
 }

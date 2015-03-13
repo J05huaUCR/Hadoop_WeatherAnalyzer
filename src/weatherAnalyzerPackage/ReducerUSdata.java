@@ -11,7 +11,6 @@ import java.io.IOException;
 public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
   private Text newKey = new Text();
   private Text usData = new Text();
-  //private StringBuilder builder = new StringBuilder();
 
   @SuppressWarnings({ "unchecked" })
   @Override
@@ -29,8 +28,6 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
     
     for (Text value : values) {
       
-      //System.out.println("REDUCER INPUT:" + key.toString() + "," + value.toString());
-      
       // Parse into JSON Data
       Object objJSON = JSONValue.parse(value.toString());
       JSONArray jsonData=(JSONArray)objJSON;
@@ -40,9 +37,7 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
       state = (String) obj.get("STATE");
       if (state.isEmpty() || state.equals("STATE")) {
         state = "XX";
-      } else {
-        //System.out.println("INPUT: " + value.toString());
-      }
+      } 
       
       month = (String) obj.get("YEARMODA");
       if (!month.isEmpty()) {
@@ -52,7 +47,7 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
         month = "00";
       }
       
-      newKey.set(state + "=" + month);
+      newKey.set(state + "-" + month);
       
       // Get temps
       String tempString = (String) obj.get("TEMP");
@@ -140,7 +135,5 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
     
     usData.set(jsonArray.toJSONString());
     context.write(newKey, usData);
-
   }
-
 }
