@@ -10,7 +10,7 @@ public class AnchorGroupComparator extends WritableComparator {
   }
 
   @Override
-  public int compare(WritableComparable a, WritableComparable b) {
+  public int compare(@SuppressWarnings("rawtypes") WritableComparable a, @SuppressWarnings("rawtypes") WritableComparable b) {
     AnchorKey anchorKey1 = (AnchorKey)a;
     AnchorKey anchorKey2 = (AnchorKey)b;
     return anchorKey1.getJoinKey().compareTo(anchorKey2.getJoinKey());
