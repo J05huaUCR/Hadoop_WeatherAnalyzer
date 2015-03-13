@@ -40,18 +40,18 @@ public class MapperUSdata extends Mapper<LongWritable, Text, Text, Text> {
       String month = (String) obj.get("YEARMODA");
       
       // Check for state
-      if (state.isEmpty()) {
+      if (state == null || month == null) {
         // no State, skip
         //System.err.println( "NO STATE");
-      } else {
-        month = month.substring(4,6);
+      } else {        
         
         // Output JSON as a string for next pass
-        String output = jsonData.toJSONString();
+        //String output = jsonData.toJSONString();
+        //System.out.println("MAPPER value output: " + line);
         
         // Assign values and output
         newKey.set(state + "-" + month);
-        newValues.set(output); 
+        newValues.set(line); 
         context.write(newKey, newValues);
       }
     }

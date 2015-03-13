@@ -24,23 +24,28 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
     
     for (Text value : values) {
       
-      // Convert value to a String
-      String line = value.toString();
+      System.out.println("INPUT: " + value.toString());
       
       // Parse into JSON Data
-      Object objJSON = JSONValue.parse(line);
+      Object objJSON = JSONValue.parse(value.toString());
       JSONArray jsonData=(JSONArray)objJSON;
       JSONObject obj=(JSONObject)jsonData.get(0);
       
       // Retrieve Values
       state = (String) obj.get("STATE");
       month = (String) obj.get("YEARMODA");
-      month = month.substring(4,6);
-
-      float temp = (float) obj.get("TEMP");
-      avgTemp = avgTemp + temp; // add up all values for the month
+      if (month != null && !month.isEmpty()) {
+        month = month.substring(4,6);
+      } else {
+        month = "00";
+      }
       
-      count++;
+      String tempString = (String) obj.get("TEMP");
+      if (tempString != null && !tempString.isEmpty()) {
+        float temp = Float.parseFloat( (String) obj.get("TEMP"));
+        avgTemp = avgTemp + temp; // add up all values for the month
+        count++;
+      }     
     }
     
     // output STATE, MONTH, AVGTEMP
@@ -49,9 +54,10 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
     outputData.put("STATE", state);
     outputData.put("MONTH", recordMonth);
     outputData.put("AVGTEMP", avgTemp);
-    String jsonOutput = outputData.toJSONString();
+    JSONArray jsonArray = new JSONArray();
+    jsonArray.add(outputData);
     
-    usData.set(jsonOutput);
+    usData.set(jsonArray.toJSONString());
     context.write(key, usData);
 
   }

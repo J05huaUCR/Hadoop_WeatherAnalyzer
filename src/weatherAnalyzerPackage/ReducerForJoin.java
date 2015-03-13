@@ -23,7 +23,7 @@ public class ReducerForJoin extends Reducer<AnchorKey, Text, NullWritable, Text>
       String keyPassedIn = key.getJoinKey().toString();
       
       // Instantiate a default JSON data object to write to output
-      String outputDataInfo = "[{\"STATION NAME\":\"\",\"CTRY\":\"\",\"STATE\":\"\",\"LAT\":\"\",\"LON\":\"\",\"ELEV\":\"\",\"BEGIN\":\"\",\"END\":\"\",\"YEARMODA\":\"\",\"TEMP\":\"\",\"MAX\":\"\",\"MIN\":\"\",\"PRCP\":\"\"}]";
+      String outputDataInfo = "[{\"STATION NAME\":\"MISSING\",\"CTRY\":\"XX\",\"STATE\":\"XX\",\"LAT\":\"9999\",\"LON\":\"9999\",\"ELEV\":\"9999\",\"BEGIN\":\"20000001\",\"END\":\"20000001\",\"YEARMODA\":\"20000001\",\"TEMP\":\"9999\",\"MAX\":\"9999\",\"MIN\":\"9999\",\"PRCP\":\"9999I\"}]";
       Object outputDataObj = JSONValue.parse(outputDataInfo);
       JSONArray outputJSONData =(JSONArray)outputDataObj;
       JSONObject outputJSONObj = new JSONObject();
@@ -33,12 +33,14 @@ public class ReducerForJoin extends Reducer<AnchorKey, Text, NullWritable, Text>
        * STATION NAME,CTRY,STATE,LAT,LON,ELEV,BEGIN,END,YEARMODA,TEMP,MAX,MIN,PRCP
        */
       for (Text value : values) {
+        
 
         // Create Temporary JSON
         Object tempParseObj = JSONValue.parse( value.toString() );
         JSONArray tempValuesArray=(JSONArray)tempParseObj;
         JSONObject tempValueObj = new JSONObject();
         tempValueObj=(JSONObject)tempValuesArray.get(0);
+       
         
         if (tempValueObj.size() > 4) { // Station
           // update station data in output object
@@ -60,8 +62,10 @@ public class ReducerForJoin extends Reducer<AnchorKey, Text, NullWritable, Text>
         }
         
         // Emit results
-        joinedText.set(keyPassedIn + "," + outputJSONObj.toString());
+        tempValuesArray.set(0, outputJSONObj);
+        joinedText.set(keyPassedIn + "," + tempValuesArray.toString());
         context.write(nullKey, joinedText);
+        
      }
   }
 }

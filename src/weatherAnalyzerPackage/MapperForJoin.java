@@ -4,7 +4,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 //import org.apache.hadoop.mapreduce.Mapper.Context;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+//import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -18,8 +18,8 @@ public class MapperForJoin extends Mapper<LongWritable, Text, AnchorKey, Text> {
 
   @Override
   protected void setup(Context context) throws IOException, InterruptedException {
-      FileSplit fileSplit = (FileSplit)context.getInputSplit();
-      joinOrder = Integer.parseInt(context.getConfiguration().get(fileSplit.getPath().getName()));
+      //FileSplit fileSplit = (FileSplit)context.getInputSplit();
+      //joinOrder = Integer.parseInt(context.getConfiguration().get(fileSplit.getPath().getName()));
   }
 
   @SuppressWarnings("unchecked")

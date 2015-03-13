@@ -210,8 +210,8 @@ public class WeatherAnalyzer {
     joinDir = "output_join";
     mapUSDir = "output_us_data";
     outputDir = "output"; // Set as Default
-    StringBuilder filePaths = new StringBuilder();
-    StringBuilder joinPaths = new StringBuilder();
+    
+    
     
     // Retrieve and parse passed in parameters
     for (int i = 0; i < args.length; i++) {
@@ -236,7 +236,13 @@ public class WeatherAnalyzer {
     deleteDirectory(mapUSDir);
     deleteDirectory(outputDir);
     
+    /*
+     * Define ReduceJoin job
+     * Maps stations and readings, filtering data as necessary and then joining
+    
+    
     // get list of station files 
+    StringBuilder filePaths = new StringBuilder();
     File stations = new File(stationsDir);
     ArrayList<String> stationsFileNames = new ArrayList<String>(Arrays.asList(stations.list()));
     
@@ -255,11 +261,7 @@ public class WeatherAnalyzer {
     }
     
     filePaths.setLength(filePaths.length() - 1);
-    
-     /*
-      * Define ReduceJoin job
-      * Maps stations and readings, filtering data as necessary and then joining
-      
+     
     Job joinDataSets = new Job(config, "Join");
     joinDataSets.setJarByClass(WeatherAnalyzer.class);
 
@@ -277,8 +279,7 @@ public class WeatherAnalyzer {
     } else {
       System.err.print("Something went horribly wrong...\n");
     }
-    */
-    //System.exit(joinDataSets.waitForCompletion(true) ? 0 : 1);
+     */
     
     
     /*
@@ -286,19 +287,42 @@ public class WeatherAnalyzer {
      * eliminating non-US results at this time
      * reduce to max/min values per month
     */
+    Configuration conf2 = new Configuration();
+    //Configuration conf2 = getConf();
+    Job job2 = new Job(conf2, "Job 2");
+    job2.setJarByClass(WeatherAnalyzer.class);
+
+    job2.setMapperClass(MapperUSdata.class);
+    job2.setReducerClass(ReducerUSdata.class);
+
+    job2.setOutputKeyClass(Text.class);
+    job2.setOutputValueClass(Text.class);
+
+    job2.setInputFormatClass(TextInputFormat.class);
+    job2.setOutputFormatClass(TextOutputFormat.class);
+
+    TextInputFormat.addInputPath(job2, new Path(joinDir));
+    TextOutputFormat.setOutputPath(job2, new Path(mapUSDir));
+
+    job2.waitForCompletion(true);
+    /*
+    Configuration job2config = new Configuration();
+    StringBuilder joinPaths = new StringBuilder();
+    
     // get list of joined US Data file
     File usData = new File(joinDir);
     ArrayList<String> joinedData = new ArrayList<String>(Arrays.asList(usData.list()));
     
     // Add station files to paths
     String joinedDataFilname = joinedData.get(0);
-    config.set(joinedDataFilname, "1"); // add file name and set order
+    job2config.set(joinedDataFilname, "1"); // add file name and set order
     joinPaths.append(joinDir + "/" + joinedDataFilname);     
       
-    /*
+    
      * Define Mapping data to US and Month, Reducing to State and Avg max/min for each month
-     */
-    Job getUSdata = new Job(config,"USdata");
+     
+    
+    Job getUSdata = new Job(job2config,"USdata");
     getUSdata.setJarByClass(WeatherAnalyzer.class);
     
     System.out.println("INPUT PATH: | " + joinDir + " |");
@@ -326,6 +350,7 @@ public class WeatherAnalyzer {
       System.err.print("Something went horribly wrong...\n");
       System.exit(1);
     }   
+    */
     
     /*
      * Job 1
