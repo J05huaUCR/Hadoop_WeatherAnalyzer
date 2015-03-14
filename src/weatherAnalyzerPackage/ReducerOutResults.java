@@ -24,7 +24,7 @@ public class ReducerOutResults extends Reducer<Text, Text, Text, Text> {
       // "AVG_TEMP":14.466904,"MIN_TEMP":9.70477,"AVG_PRCP_DIFF":10.390265,"MAX_TEMP_MONTH":7,
       // "AVG_PRCP":91.88434,"MIN_PRCP_MONTH":6,"AVG_TEMP_DIFF":61.42468000000001,"MIN_TEMP_MONTH":2,
       // "MIN_PRCP":81.50982}]|
-      System.out.println("OUTPUT REDUCER: key:|" + key.toString() + "|, value:|"+ value.toString() + "");
+      //System.out.println("OUTPUT REDUCER: key:|" + key.toString() + "|, value:|"+ value.toString() + "");
       
       
       /*
@@ -40,7 +40,7 @@ public class ReducerOutResults extends Reducer<Text, Text, Text, Text> {
       JSONArray outputJSONData =(JSONArray)outputDataObj;
       JSONObject outputJSONObj = new JSONObject();
       outputJSONObj=(JSONObject)outputJSONData.get(0);
-      System.err.println("SIZE: |" + outputJSONObj.get(0) + "|");
+      //System.err.println("SIZE: |" + outputJSONObj.get(0) + "|");
       
       outputResultsString.setLength(0);
       outputResultsString.append("STATE: " + outputJSONObj.get("STATE") + ",");
@@ -57,7 +57,7 @@ public class ReducerOutResults extends Reducer<Text, Text, Text, Text> {
       outputResultsString.append("MIN_PRCP" + outputJSONObj.get("MIN_PRCP") + ",");
       outputResultsString.append("MIN_PRCP_MONTH: " + outputJSONObj.get("MIN_PRCP_MONTH"));
 
-      System.out.println("VALUES: " + outputResultsString.toString());
+      //System.out.println("VALUES: " + outputResultsString.toString());
     
       newKey.set("X");
       newValues.set(outputResultsString.toString());

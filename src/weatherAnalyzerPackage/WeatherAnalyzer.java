@@ -10,6 +10,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -117,7 +118,7 @@ import java.util.Arrays;
  * are many ways that you can do this. Here are a few examples:
  *  [ ] A good use of combiners
  *  [ ] A clever way to achieve faster execution time
- *  [ ] Enriching the data, e.g. including the average precipitation for the two months
+ *  [x] Enriching the data, e.g. including the average precipitation for the two months
  * 
  * Bigger Bonus:
  * [ ] Include the stations with “CTRY” as “US” that don’t have a state tag, 
@@ -208,8 +209,13 @@ public class WeatherAnalyzer {
     mapUSDir = "output_us_data";
     mapStateDir = "output_state_data";
     outputDir = "output"; // Set as Default
-    
-    
+    final Double NANO2SEC = (double) 1000000000; // for converting nanoseconds to seconds
+    Double duration = (Double) 0.0;
+    long startTime = System.nanoTime();
+    long endTime = System.nanoTime();
+    long jobStartTime = System.nanoTime();
+    long jobEndTime = System.nanoTime();
+    Double jobDuration = (Double) 0.0;    
     
     // Retrieve and parse passed in parameters
     for (int i = 0; i < args.length; i++) {
@@ -238,7 +244,9 @@ public class WeatherAnalyzer {
     /*
      * Define ReduceJoin job
      * Maps stations and readings, filtering data as necessary and then joining
-    
+
+    // Begin timer
+    jobStartTime = System.nanoTime();
     
     // get list of station files 
     StringBuilder filePaths = new StringBuilder();
@@ -274,16 +282,24 @@ public class WeatherAnalyzer {
     joinDataSets.setOutputKeyClass(AnchorKey.class);
     joinDataSets.setOutputValueClass(Text.class);
     if ( joinDataSets.waitForCompletion(true) ) {
-      System.out.print("Join Done.\n");
+      
+      jobEndTime = System.nanoTime();   
+      jobDuration = (double) ((jobEndTime - jobStartTime) / NANO2SEC);  
+      System.out.print("Join completed in " + String.format("%.4f", jobDuration) + "secs.\n");
+    
     } else {
       System.err.print("Something went horribly wrong...\n");
     }
+    
+    
     */
     
     /*
      * Map results from previous run to consolidate by state, year/month, 
      * eliminating non-US results at this time
      * reduce to max/min values per month
+ 
+    jobStartTime = System.nanoTime();
     
     Configuration getStateDataConf = new Configuration();
     Job getStateData = new Job(getStateDataConf, "Get States' data");
@@ -303,7 +319,11 @@ public class WeatherAnalyzer {
 
     // Run Job
     if ( getStateData.waitForCompletion(true) ) {
-      System.out.println("getStatesData Done.");
+
+      jobEndTime = System.nanoTime();   
+      jobDuration = (double) ((jobEndTime - jobStartTime) / NANO2SEC);  
+      System.out.print("getStatesData completed in " + String.format("%.4f", jobDuration) + "secs.\n");
+    
     } else {
       System.err.println("Something went horribly wrong...");
     }
@@ -314,6 +334,9 @@ public class WeatherAnalyzer {
      * eliminating non-US results at this time
      * reduce to max/min values per month
     */
+    
+    jobStartTime = System.nanoTime();
+    
     Configuration compileDataConf = new Configuration();
     Job compileData = new Job(compileDataConf, "Get States data");
     compileData.setJarByClass(WeatherAnalyzer.class);
@@ -333,15 +356,22 @@ public class WeatherAnalyzer {
 
     // Run Job
     if ( compileData.waitForCompletion(true) ) {
-      System.out.println("compileData Done.");
+      
+      jobEndTime = System.nanoTime();   
+      jobDuration = (double) ((jobEndTime - jobStartTime) / NANO2SEC);  
+      System.out.print("compileData completed in " + String.format("%.4f", jobDuration) + "secs.\n");
+      
     } else {
       System.err.println("Something went horribly wrong...");
     }
+
     
     
     /*
      * Take output State data, map on temp difference and output results
     */
+    jobStartTime = System.nanoTime();
+    
     Configuration outputResulstsConf = new Configuration();
     Job outputResults = new Job(outputResulstsConf, "Output results");
     outputResults.setJarByClass(WeatherAnalyzer.class);
@@ -360,10 +390,19 @@ public class WeatherAnalyzer {
 
     // Run Job
     if ( outputResults.waitForCompletion(true) ) {
-      System.out.println("outputResulstsConf Done.");
+      
+      jobEndTime = System.nanoTime();   
+      jobDuration = (double) ((jobEndTime - jobStartTime) / NANO2SEC);  
+      System.out.print("outputResulstsConf completed in " + String.format("%.4f", jobDuration) + "secs.\n");
+      
+      endTime = System.nanoTime();   
+      duration = (double) ((endTime - startTime)/ NANO2SEC);
+      System.out.println();
+      System.out.println("Analysis complete in " + String.format("%.4f", duration) + "secs.");
+      
     } else {
       System.err.println("Something went horribly wrong...");
     }
-
   }
+  
 }

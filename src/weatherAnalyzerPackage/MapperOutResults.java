@@ -19,7 +19,7 @@ public class MapperOutResults extends Mapper<LongWritable, Text, Text, Text> {
   @Override
   protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 
-    System.out.println("MAPPER_RESULTS: key:|" + key.toString() + "|," + value.toString());
+    //System.out.println("MAPPER_RESULTS: key:|" + key.toString() + "|," + value.toString());
     
     // Assign values and output
     String line = value.toString();
@@ -28,7 +28,7 @@ public class MapperOutResults extends Mapper<LongWritable, Text, Text, Text> {
     newKey.set(keyBuilder);
     newValue.set(line);
     
-    System.out.println("MAPPER: key|" + keyBuilder + "|, value:|" + line + "|");
+    //System.out.println("MAPPER: key|" + keyBuilder + "|, value:|" + line + "|");
     context.write(newKey, newValue);
     
     /* Convert value to a String
