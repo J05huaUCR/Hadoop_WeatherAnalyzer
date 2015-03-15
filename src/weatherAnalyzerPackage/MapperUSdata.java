@@ -3,9 +3,12 @@ package weatherAnalyzerPackage;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
+
+/*
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
+import org.json.simple.JSONValue; */
+
 import java.io.IOException;
 
 public class MapperUSdata extends Mapper<LongWritable, Text, Text, Text> {
@@ -24,18 +27,22 @@ public class MapperUSdata extends Mapper<LongWritable, Text, Text, Text> {
     
     if (line.length() > 0 && line.substring(0,1).equals("[") ) { // JSON string passed in
       
-      /* Parse into JSON Data*/
+      /* Simple JSON 
       Object objJSON = JSONValue.parse(line);
       JSONArray jsonData=(JSONArray)objJSON;
-      JSONObject obj=(JSONObject)jsonData.get(0);
+      JSONObject obj=(JSONObject)jsonData.get(0);*/
+      
+      /* Parse into JSON Data*/
+      JsonArray minJsonArray = JsonArray.readFrom( line );
+      JsonObject minJsonObject = minJsonArray.get(0).asObject();
       
       // Retrieve Values
-      String state = (String) obj.get("STATE");
+      String state = minJsonObject.get("STATE").asString();
       if (state.isEmpty() ) {
         state = "XX";
       }
-      
-      String month = (String) obj.get("YEARMODA");
+
+      String month = minJsonObject.get("YEARMODA").asString();
       if (!month.isEmpty()) {
         month = month.substring(4,6);
       } else {

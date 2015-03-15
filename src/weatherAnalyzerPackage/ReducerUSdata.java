@@ -2,9 +2,12 @@ package weatherAnalyzerPackage;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
+
+/*
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
+import org.json.simple.JSONValue;*/
+
 
 import java.io.IOException;
 
@@ -12,7 +15,7 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
   private Text newKey = new Text();
   private Text usData = new Text();
 
-  @SuppressWarnings({ "unchecked" })
+  //@SuppressWarnings({ "unchecked" })
   @Override
   protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 
@@ -28,18 +31,24 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
     
     for (Text value : values) {
       
-      // Parse into JSON Data
+      /* Simple JSON 
       Object objJSON = JSONValue.parse(value.toString());
       JSONArray jsonData=(JSONArray)objJSON;
-      JSONObject obj=(JSONObject)jsonData.get(0);
+      JSONObject obj=(JSONObject)jsonData.get(0); */
+      
+      // Parse into JSON Data
+      JsonArray minJsonArray = JsonArray.readFrom( value.toString() );
+      JsonObject minJsonObject = minJsonArray.get(0).asObject();
       
       // Retrieve Values
-      state = (String) obj.get("STATE");
+      //state = (String) obj.get("STATE");
+      state = minJsonObject.get("STATE").asString();
       if (state.isEmpty() || state.equals("STATE")) {
         state = "XX";
       } 
       
-      month = (String) obj.get("YEARMODA");
+      //month = (String) obj.get("YEARMODA");
+      month = minJsonObject.get("YEARMODA").asString();
       if (!month.isEmpty()) {
         month = month.substring(4,6);
         recordMonth = Integer.parseInt(month);
@@ -50,9 +59,11 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
       newKey.set(state + "-" + month);
       
       // Get temps
-      String tempString = (String) obj.get("TEMP");
+      //String tempString = (String) obj.get("TEMP");
+      String tempString = minJsonObject.get("TEMP").asString();
       if (tempString != null && !tempString.isEmpty()) {
-        float temp = Float.parseFloat( (String) obj.get("TEMP"));
+        //float temp = Float.parseFloat( (String) obj.get("TEMP"));
+        float temp = Float.parseFloat( minJsonObject.get("TEMP").asString() );
         runningTemp = runningTemp + temp; // add up all values for the month
         countTemp++;
       }   
@@ -69,13 +80,14 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
        *    H - station recorded a 0 for the day (although there was some recorded instance of precipitation).
        *    I - station recorded a 0 for the day (and there was NO recorded instance of precipitation).
        */
-      String prcpString = (String) obj.get("PRCP");
-      if (prcpString != null && !prcpString.isEmpty()) {
+      //String prcpString = (String) obj.get("PRCP");
+      String prcpString = minJsonObject.get("PRCP").asString();
+      if (!prcpString.isEmpty()) {
         
         String flagPrcp = prcpString.substring((prcpString.length() - 1), prcpString.length());
         String tempPrcp = prcpString.substring(0,(prcpString.length() - 2));
         
-        float prcp = Float.parseFloat( tempPrcp);
+        float prcp = Float.parseFloat( tempPrcp );
         if (flagPrcp.equals("A")) {
           prcp = prcp * 4;
         } else if (flagPrcp.equals("B") || flagPrcp.equals("E") ) {
@@ -97,16 +109,31 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
     
     // output STATE, MONTH, AVGTEMPm AVGPRCP
     avgTemp = runningTemp / countTemp; // get average temp for this month
-    avgPrcp = runningPrcp / countPrcp; // get average temp for this month
+    if (countPrcp > 0) {
+      avgPrcp = runningPrcp / countPrcp; // get average temp for this month
+    } else {
+      avgPrcp = (float) 0.0;
+    }
+    
+    /* Simple JSON 
     JSONObject outputData = new JSONObject();
     outputData.put("STATE", state);
     outputData.put("MONTH", recordMonth);
     outputData.put("AVGTEMP", avgTemp);
     outputData.put("AVGPRCP", avgPrcp);
     JSONArray jsonArray = new JSONArray();
+    jsonArray.add(outputData);*/
+    
+    /* Minimal JSON */
+    JsonObject outputData = new JsonObject();
+    outputData.add("STATE", state);
+    outputData.add("MONTH", recordMonth);
+    outputData.add("AVGTEMP", avgTemp);
+    outputData.add("AVGPRCP", avgPrcp);
+    JsonArray jsonArray = new JsonArray();
     jsonArray.add(outputData);
     
-    usData.set(jsonArray.toJSONString());
+    usData.set(jsonArray.toString());
     context.write(newKey, usData);
   }
 }

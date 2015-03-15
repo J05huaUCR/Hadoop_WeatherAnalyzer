@@ -2,19 +2,15 @@ package weatherAnalyzerPackage;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
-
 import java.io.IOException;
 
 public class ReduceStateData extends Reducer<Text, Text, Text, Text> {
   private Text newKey = new Text();
   private Text stateDate = new Text();
 
-  @SuppressWarnings({ "unchecked" })
   @Override
-  protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+  protected void reduce(Text key, Iterable<Text> values, Context context) 
+      throws IOException, InterruptedException {
 
     double maxTemp = (double) 0.0;
     double minTemp = (double) 9999.0;
@@ -35,31 +31,31 @@ public class ReduceStateData extends Reducer<Text, Text, Text, Text> {
     for (Text value : values) {
       
       // [{"AVGPRCP":17.309917,"STATE":"AK","AVGTEMP":10.797153,"MONTH":1}]
-      //System.out.println("STATE INPUT: " + value.toString());
       
-      // Parse into JSON Data
-      Object objJSON = JSONValue.parse(value.toString());
-      JSONArray jsonData=(JSONArray)objJSON;
-      JSONObject obj=(JSONObject)jsonData.get(0);
-      //System.out.println("STATE INPUT:" + jsonData.toString());
+      /* Minimal JSON */
+      JsonArray minJsonArray = JsonArray.readFrom( value.toString() );
+      JsonObject minJsonObject = minJsonArray.get(0).asObject();
       
       // Retrieve Values
-      long l = (Long) obj.get("MONTH");
+      long l = minJsonObject.get("MONTH").asLong();
       month = (int) l;
       
       if (month > 0) {
-        state = (String) obj.get("STATE");
-        //avgTemp = (double) obj.get("AVGTEMP"); // JDK 1.7
-        //avgPrcp = (double) obj.get("AVGPRCP"); // JDK 1.7
+        
+        // Get State
+        state = minJsonObject.get("STATE").asString();      
         
         try {
-          avgTemp = Double.parseDouble(obj.get("AVGTEMP").toString());
+          //avgTemp = Double.parseDouble(obj.get("AVGTEMP").toString());
+          avgTemp = minJsonObject.get("AVGTEMP").asDouble();
         } catch (Exception e) {
           // 
         }
        
         try {
-          avgPrcp = Double.parseDouble(obj.get("AVGPRCP").toString());
+          //avgPrcp = Double.parseDouble(obj.get("AVGPRCP").toString());
+          //avgPrcp = Double.parseDouble(minJsonObject.get("AVGPRCP").asString());
+          avgPrcp = minJsonObject.get("AVGPRCP").asDouble();
         } catch (Exception e) {
           //
         }
@@ -90,7 +86,7 @@ public class ReduceStateData extends Reducer<Text, Text, Text, Text> {
       }     
     }
     
-    if (month > 1 && !state.equals("XX") ) {
+    if (month > 0 && !state.equals("XX") ) {
       // output STATE DATA to JSON
       tempDiff = maxTemp - minTemp;
       prcpDiff = maxPrcp - minPrcp; 
@@ -101,25 +97,28 @@ public class ReduceStateData extends Reducer<Text, Text, Text, Text> {
       String buildKey = roundOff + "";
       buildKey = buildKey.substring(0, (buildKey.length() - 2));
       newKey.set( buildKey + "," );
-    
-      JSONObject outputData = new JSONObject();
-      outputData.put("STATE", state);
-      outputData.put("MAX_TEMP", maxTemp);
-      outputData.put("MAX_TEMP_MONTH", maxTempMonth);
-      outputData.put("MIN_TEMP", minTemp);
-      outputData.put("MIN_TEMP_MONTH", minTempMonth);
-      outputData.put("AVG_TEMP", avgTemp);
-      outputData.put("AVG_TEMP_DIFF", tempDiff);
-      outputData.put("MAX_PRCP", maxPrcp);
-      outputData.put("MAX_PRCP_MONTH", maxPrcpMonth);
-      outputData.put("MIN_PRCP", minPrcp);
-      outputData.put("MIN_PRCP_MONTH", minPrcpMonth);
-      outputData.put("AVG_PRCP", avgPrcp);
-      outputData.put("AVG_PRCP_DIFF", prcpDiff);
-      JSONArray jsonArray = new JSONArray();
+
+      /* Simple JSON */
+      JsonObject outputData = new JsonObject();
+      outputData.add("STATE", state);
+      outputData.add("MAX_TEMP", maxTemp);
+      outputData.add("MAX_TEMP_MONTH", maxTempMonth);
+      outputData.add("MIN_TEMP", minTemp);
+      outputData.add("MIN_TEMP_MONTH", minTempMonth);
+      outputData.add("AVG_TEMP", avgTemp);
+      outputData.add("AVG_TEMP_DIFF", tempDiff);
+      outputData.add("MAX_PRCP", maxPrcp);
+      outputData.add("MAX_PRCP_MONTH", maxPrcpMonth);
+      outputData.add("MIN_PRCP", minPrcp);
+      outputData.add("MIN_PRCP_MONTH", minPrcpMonth);
+      outputData.add("AVG_PRCP", avgPrcp);
+      outputData.add("AVG_PRCP_DIFF", prcpDiff);
+      JsonArray jsonArray = new JsonArray();
       jsonArray.add(outputData);
       
-      stateDate.set(jsonArray.toJSONString());
+      System.out.println("JSON OUTPUT: " + buildKey + ":" + jsonArray.toString());
+      
+      stateDate.set(jsonArray.toString());
       context.write(newKey, stateDate);
     }
   }

@@ -10,8 +10,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.File;
-//import java.util.ArrayList;
-//import java.util.Arrays;
 
 /**
 * http://codingjunkie.net/mapreduce-reduce-joins/
@@ -294,6 +292,7 @@ public class WeatherAnalyzer {
       System.err.print("Something went horribly wrong...\n");
     }
     
+    
     /*
      * Map results from previous run to consolidate by state, year/month, 
      * eliminating non-US results at this time
@@ -336,7 +335,7 @@ public class WeatherAnalyzer {
      * Map results from previous run to consolidate by state, year/month, 
      * eliminating non-US results at this time
      * reduce to max/min values per month
-    */
+     */
     
     jobStartTime = System.nanoTime();
     
@@ -367,6 +366,7 @@ public class WeatherAnalyzer {
     } else {
       System.err.println("Something went horribly wrong...");
     }
+     
     
     /*
      * Take output State data, map on temp difference and output results

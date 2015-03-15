@@ -3,10 +3,6 @@ package weatherAnalyzerPackage;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-//import org.apache.hadoop.mapreduce.Mapper.Context;
-//import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
@@ -22,13 +18,13 @@ public class MapperForJoin extends Mapper<LongWritable, Text, AnchorKey, Text> {
       //joinOrder = Integer.parseInt(context.getConfiguration().get(fileSplit.getPath().getName()));
   }
 
-  @SuppressWarnings("unchecked")
+  //@SuppressWarnings("unchecked")
   @Override
   protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
     String tempKey = "";
     String line = value.toString();
     String flag = line.substring(0, 1);
-    JSONObject jsonData = new JSONObject(); // Create JSON object to hold data
+    JsonObject minJsonObject = new JsonObject(); // Minimal JSON
     
     /* Check for CSV */
     if (flag.equals("\"")) {
@@ -58,35 +54,35 @@ public class MapperForJoin extends Mapper<LongWritable, Text, AnchorKey, Text> {
             break;
 
           case 2:
-            jsonData.put("STATION NAME", tokenString.replaceAll("\"", ""));
+            minJsonObject.add("STATION NAME", tokenString.replaceAll("\"", ""));
             break;
 
           case 3:
-            jsonData.put("CTRY", tokenString.replaceAll("\"", ""));
+            minJsonObject.add("CTRY", tokenString.replaceAll("\"", ""));
             break;
 
           case 4:
-            jsonData.put("STATE", tokenString.replaceAll("\"", ""));
+            minJsonObject.add("STATE", tokenString.replaceAll("\"", ""));
             break;
 
           case 5:
-            jsonData.put("LAT", tokenString.replaceAll("\"", ""));
+            minJsonObject.add("LAT", tokenString.replaceAll("\"", ""));
             break;
 
           case 6:
-            jsonData.put("LON", tokenString.replaceAll("\"", ""));
+            minJsonObject.add("LON", tokenString.replaceAll("\"", ""));
             break;
 
           case 7:
-            jsonData.put("ELEV", tokenString.replaceAll("\"", ""));
+            minJsonObject.add("ELEV", tokenString.replaceAll("\"", ""));
             break;
 
           case 8:
-            jsonData.put("BEGIN", tokenString.replaceAll("\"", ""));
+            minJsonObject.add("BEGIN", tokenString.replaceAll("\"", ""));
             break;
 
           case 9:
-            jsonData.put("END", tokenString.replaceAll("\"", ""));
+            minJsonObject.add("END", tokenString.replaceAll("\"", ""));
             break;
 
         } // End Switch
@@ -126,22 +122,23 @@ public class MapperForJoin extends Mapper<LongWritable, Text, AnchorKey, Text> {
       // Set Key
       tempKey = valuesResult[0] + "-" + valuesResult[1];
       
-      /* Set Value as JSON Object */
-      jsonData.put("YEARMODA", valuesResult[2]);
-      jsonData.put("TEMP", valuesResult[3]);
-      jsonData.put("MAX", valuesResult[17]);
-      jsonData.put("MIN", valuesResult[18]);
-      jsonData.put("PRCP", valuesResult[19]);
+      /* Set Value as minimalJSON Object */
+      minJsonObject.add("YEARMODA", valuesResult[2]);
+      minJsonObject.add("TEMP", valuesResult[3]);
+      minJsonObject.add("MAX", valuesResult[17]);
+      minJsonObject.add("MIN", valuesResult[18]);
+      minJsonObject.add("PRCP", valuesResult[19]);
    
       //System.out.println("MAP RECORD:" + jsonData.toJSONString());
     } 
+
+    /* Create minimalJSON Array to hold JSON object and output as string */
+    JsonArray minJsonArray = new JsonArray();
+    minJsonArray.add(minJsonObject);
+    String jsonStringOutput = minJsonArray.toString();
     
-    /* Create JSON Array to hold JSON object and output as string */
-    JSONArray jsonArray = new JSONArray();
-    jsonArray.add(jsonData);
-    String jsonStringOutput = jsonArray.toJSONString();
+    
     //System.out.println("MAP RECORD:" + jsonStringOutput);
-    
     data.set(jsonStringOutput); // set data = to compiled data as String
     taggedKey.set(tempKey,joinOrder);
     context.write(taggedKey, data);
