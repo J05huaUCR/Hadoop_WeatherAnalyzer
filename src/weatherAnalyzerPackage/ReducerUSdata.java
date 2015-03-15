@@ -76,45 +76,18 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
         String tempPrcp = prcpString.substring(0,(prcpString.length() - 2));
         
         float prcp = Float.parseFloat( tempPrcp);
-        switch(flagPrcp) {
-          case "A":
-            prcp = prcp * 4;
-            break;
-            
-          case "B":
-            prcp = prcp * 2;
-            break;
-            
-          case "C":
-            prcp = prcp * (float)1.33;
-            break;
-            
-          case "D":
-            prcp = prcp * 1;
-            break;
-  
-          case "E":
-            prcp = prcp * 2;
-            break;
-  
-          case "F":
-            prcp = prcp * 1;
-            break;
-            
-          case "G":
-            prcp = prcp * 1;
-            break;
-            
-          case "H":
-            prcp = prcp * 1;
-            break;
-            
-          case "I":
-            prcp = (float) 9999.0;
-            break;
-          
+        if (flagPrcp.equals("A")) {
+          prcp = prcp * 4;
+        } else if (flagPrcp.equals("B") || flagPrcp.equals("E") ) {
+          prcp = prcp * 2;
+        } else if (flagPrcp.equals("C") ) {
+          prcp = prcp * (float)1.33;
+        } else if (flagPrcp.equals("D") || flagPrcp.equals("F") || flagPrcp.equals("G") || flagPrcp.equals("G")) {
+          flagPrcp.equals("G");
+        } else {
+          prcp = (float) 9999.0;
         }
-        
+
         if (prcp < 9000) {
           runningPrcp = runningPrcp + prcp; // add up all values for the month
           countPrcp++;

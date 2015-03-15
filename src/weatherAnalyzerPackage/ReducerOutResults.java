@@ -11,10 +11,9 @@ import java.io.IOException;
 public class ReducerOutResults extends Reducer<Text, Text, Text, Text> {
   private Text newKey = new Text();
   private Text newValues = new Text();
-  private Text stateDate = new Text();
   private StringBuilder outputResultsString = new StringBuilder();
 
-  @SuppressWarnings({ "unchecked" })
+  @SuppressWarnings({ })
   @Override
   protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
     
@@ -24,16 +23,11 @@ public class ReducerOutResults extends Reducer<Text, Text, Text, Text> {
       // "AVG_TEMP":14.466904,"MIN_TEMP":9.70477,"AVG_PRCP_DIFF":10.390265,"MAX_TEMP_MONTH":7,
       // "AVG_PRCP":91.88434,"MIN_PRCP_MONTH":6,"AVG_TEMP_DIFF":61.42468000000001,"MIN_TEMP_MONTH":2,
       // "MIN_PRCP":81.50982}]|
-      //System.out.println("OUTPUT REDUCER: key:|" + key.toString() + "|, value:|"+ value.toString() + "");
+     // System.out.println("OUTPUT REDUCER: key:|" + key.toString() + "|, value:|"+ value.toString() + "");
       
       
       /*
-       * 
-       
-      // Parse into JSON Data
-      Object objJSON = JSONValue.parse(value.toString());
-      JSONArray jsonData=(JSONArray)objJSON;
-      JSONObject obj=(JSONObject)jsonData.get(0);      
+       * Parse into JSON Data
       */
       
       Object outputDataObj = JSONValue.parse(value.toString());
@@ -58,8 +52,7 @@ public class ReducerOutResults extends Reducer<Text, Text, Text, Text> {
       outputResultsString.append("MIN_PRCP_MONTH: " + outputJSONObj.get("MIN_PRCP_MONTH"));
 
       //System.out.println("VALUES: " + outputResultsString.toString());
-    
-      newKey.set("X");
+      newKey.set(key.toString());
       newValues.set(outputResultsString.toString());
 
       //stateDate.set(jsonArray.toJSONString());

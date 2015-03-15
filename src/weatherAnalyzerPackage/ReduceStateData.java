@@ -48,11 +48,22 @@ public class ReduceStateData extends Reducer<Text, Text, Text, Text> {
       month = (int) l;
       
       if (month > 0) {
-        avgTemp = (double) obj.get("AVGTEMP");
         state = (String) obj.get("STATE");
-        avgPrcp = (double) obj.get("AVGPRCP");
+        //avgTemp = (double) obj.get("AVGTEMP"); // JDK 1.7
+        //avgPrcp = (double) obj.get("AVGPRCP"); // JDK 1.7
         
-        
+        try {
+          avgTemp = Double.parseDouble(obj.get("AVGTEMP").toString());
+        } catch (Exception e) {
+          // 
+        }
+       
+        try {
+          avgPrcp = Double.parseDouble(obj.get("AVGPRCP").toString());
+        } catch (Exception e) {
+          //
+        }
+       
         // Check for max temp
         if (avgTemp > maxTemp) {
           maxTemp = avgTemp;

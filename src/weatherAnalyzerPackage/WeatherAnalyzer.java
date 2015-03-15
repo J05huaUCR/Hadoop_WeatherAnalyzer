@@ -10,9 +10,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.File;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
+//import java.util.ArrayList;
+//import java.util.Arrays;
 
 /**
 * http://codingjunkie.net/mapreduce-reduce-joins/
@@ -181,6 +180,27 @@ import java.util.Arrays;
  *    DIFFERENCE BETWEEN THE TWO - "25.614"
  *    
  *    **example of extra credit fields
+ *    
+ *    What's left:
+[x] Sort output
+[x] Add timers for each map/reduce phase
+[ ] Translate state ID to name and month number to month (easy, just haven't gotten to it yet.
+[ ] confirm the calculation of the temp ranges (right now, Puerto Rico shows a variance of ~1 degree?!!)
+[ ] batch script
+
+Extra credit:
+[ ] define lat/lon boundaries for the US + territories and filter and assign locations to stations that are not listed as US
+[ ] look at Combiners Partitioners to see if possible to accelerate execution 
+    (will use the base version to time and compare against
+[X] I am tracking precipitation already (i was already running similar code, just added it in)
+[ ] I think it would be fairly easy to track the min/max  temp, rainfall for /yearmonthdate 
+    with location to show the extremes for the state versus the average
+    
+    hdfs dfs -rm -r output
+    hdfs dfs -rm -r output_join
+    hdfs dfs -rm -r output_state_data
+    hdfs dfs -rm -r output_us_data
+    
  */
 public class WeatherAnalyzer {
   
@@ -235,44 +255,27 @@ public class WeatherAnalyzer {
       }
     }
     
-    // clear previous passes if present
-    //deleteDirectory(joinDir);
-    //deleteDirectory(mapUSDir);
+    /*
+     *  clear previous passes if present
+     
+    deleteDirectory(joinDir);
+    deleteDirectory(mapUSDir);
     deleteDirectory(mapStateDir);
-    deleteDirectory(outputDir);
+    deleteDirectory(outputDir);*/
     
     /*
      * Define ReduceJoin job
      * Maps stations and readings, filtering data as necessary and then joining
-
+     */
     // Begin timer
     jobStartTime = System.nanoTime();
+    String filePaths = stationsDir + "/," + readingsDir + "/";
     
-    // get list of station files 
-    StringBuilder filePaths = new StringBuilder();
-    File stations = new File(stationsDir);
-    ArrayList<String> stationsFileNames = new ArrayList<String>(Arrays.asList(stations.list()));
-    
-    // Add station files to paths
-    config.set(stationsFileNames.get(0), "1"); // add file name and set order
-    filePaths.append(stationsDir + "/" + stationsFileNames.get(0)).append(",");
-    
-    // get list of reading files
-    File readings = new File(readingsDir);
-    ArrayList<String> readingsFileNames = new ArrayList<String>(Arrays.asList(readings.list()));
-
-    // Add readings files to paths
-    for (int i = 0; i < readingsFileNames.size(); i++) {
-      config.set(readingsFileNames.get(i), Integer.toString(i+2)); // add file name and set order
-      filePaths.append(readingsDir + "/" + readingsFileNames.get(0)).append(",");
-    }
-    
-    filePaths.setLength(filePaths.length() - 1);
-     
     Job joinDataSets = new Job(config, "Join");
     joinDataSets.setJarByClass(WeatherAnalyzer.class);
 
-    FileInputFormat.addInputPaths(joinDataSets, filePaths.toString());
+    //FileInputFormat.addInputPaths(joinDataSets, filePaths.toString());
+    FileInputFormat.addInputPaths(joinDataSets, filePaths);
     FileOutputFormat.setOutputPath(joinDataSets, new Path(joinDir));
 
     joinDataSets.setMapperClass(MapperForJoin.class);
@@ -291,13 +294,12 @@ public class WeatherAnalyzer {
       System.err.print("Something went horribly wrong...\n");
     }
     
-    
-    */
-    
     /*
      * Map results from previous run to consolidate by state, year/month, 
      * eliminating non-US results at this time
      * reduce to max/min values per month
+     * 
+     */
  
     jobStartTime = System.nanoTime();
     
@@ -327,7 +329,8 @@ public class WeatherAnalyzer {
     } else {
       System.err.println("Something went horribly wrong...");
     }
-    */
+    
+    
     
     /*
      * Map results from previous run to consolidate by state, year/month, 
@@ -364,8 +367,6 @@ public class WeatherAnalyzer {
     } else {
       System.err.println("Something went horribly wrong...");
     }
-
-    
     
     /*
      * Take output State data, map on temp difference and output results
