@@ -17,7 +17,7 @@ public class StationLocater {
   Double latitude = 9999.9; // in degrees
   Double longitude = 9999.9; // in degrees
   
-  public int findStation(Double coodLat, Double coodLong ) {
+  public int find(Double coodLat, Double coodLong ) {
     
     latitude = coodLat;
     longitude = coodLong;
@@ -25,11 +25,20 @@ public class StationLocater {
     return this.findNearestStation();
   }
   
-  public int findStation(String coodLat, String coodLong ) {
+  public int find(String coodLat, String coodLong ) {
 
-    latitude = Double.parseDouble(coodLat);
-    latitude = Double.parseDouble(coodLong);
+    try {
+      latitude = Double.parseDouble(coodLat);
+    } catch (Exception e) {
+      return -1;
+    }
     
+    try {
+      longitude = Double.parseDouble(coodLong);
+    } catch (Exception e) {
+      return -1;
+    }
+
     return this.findNearestStation();
   }
   

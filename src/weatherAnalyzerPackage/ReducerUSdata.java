@@ -31,17 +31,11 @@ public class ReducerUSdata extends Reducer<Text, Text, Text, Text> {
     
     for (Text value : values) {
       
-      /* Simple JSON 
-      Object objJSON = JSONValue.parse(value.toString());
-      JSONArray jsonData=(JSONArray)objJSON;
-      JSONObject obj=(JSONObject)jsonData.get(0); */
-      
       // Parse into JSON Data
       JsonArray minJsonArray = JsonArray.readFrom( value.toString() );
       JsonObject minJsonObject = minJsonArray.get(0).asObject();
       
       // Retrieve Values
-      //state = (String) obj.get("STATE");
       state = minJsonObject.get("STATE").asString();
       if (state.isEmpty() || state.equals("STATE")) {
         state = "XX";

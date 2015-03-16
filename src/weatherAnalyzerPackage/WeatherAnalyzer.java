@@ -100,13 +100,13 @@ import java.io.File;
  *  (it should be your own folder when you run it).
  *  
  * Think About:
- *    1. There are different ways to do joins in mapreduce. What can you use 
+ *  [x] There are different ways to do joins in mapreduce. What can you use 
  *      from the datasets to inform your decision (e.g. size)? Please Google 
  *      joins in mapreduce for more information
- *    2. Make sure your parse correctly. One file is a csv, the other is not. 
+ *  [x] Make sure your parse correctly. One file is a csv, the other is not. 
  *      One file has a single row of Headers, the other has many.
- *    3. How many passes should you do? How mush work should each pass do?
- *    4. Make sure to start early. The cluster will get slower as more people 
+ *  [x] How many passes should you do? How much work should each pass do?
+ *  [x] Make sure to start early. The cluster will get slower as more people 
  *      use it. A single pass of the data took me about 2 minutes while the 
  *      cluster was empty.
  *    
@@ -293,6 +293,7 @@ public class WeatherAnalyzer {
     }
     
     
+    
     /*
      * Map results from previous run to consolidate by state, year/month, 
      * eliminating non-US results at this time
@@ -404,6 +405,7 @@ public class WeatherAnalyzer {
     } else {
       System.err.println("Something went horribly wrong...");
     }
+    
   }
   
 }
