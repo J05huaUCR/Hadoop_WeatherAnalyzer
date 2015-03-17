@@ -259,12 +259,14 @@ public class WeatherAnalyzer {
     deleteDirectory(joinDir);
     deleteDirectory(mapUSDir);
     deleteDirectory(mapStateDir);
-    deleteDirectory(outputDir);*/
+    deleteDirectory(outputDir);
+    */
     
     /*
      * Define ReduceJoin job
      * Maps stations and readings, filtering data as necessary and then joining
      */
+    
     // Begin timer
     jobStartTime = System.nanoTime();
     String filePaths = stationsDir + "/," + readingsDir + "/";
@@ -291,16 +293,14 @@ public class WeatherAnalyzer {
     } else {
       System.err.print("Something went horribly wrong...\n");
     }
-    
-    
-    
+       
     /*
      * Map results from previous run to consolidate by state, year/month, 
      * eliminating non-US results at this time
      * reduce to max/min values per month
-     * 
-     */
- 
+     *    
+     */ 
+   
     jobStartTime = System.nanoTime();
     
     Configuration getStateDataConf = new Configuration();
@@ -329,14 +329,12 @@ public class WeatherAnalyzer {
     } else {
       System.err.println("Something went horribly wrong...");
     }
-    
-    
-    
+
     /*
      * Map results from previous run to consolidate by state, year/month, 
      * eliminating non-US results at this time
      * reduce to max/min values per month
-     */
+    */
     
     jobStartTime = System.nanoTime();
     
@@ -367,7 +365,7 @@ public class WeatherAnalyzer {
     } else {
       System.err.println("Something went horribly wrong...");
     }
-     
+      
     
     /*
      * Take output State data, map on temp difference and output results

@@ -26,7 +26,7 @@ public class ReducerOutResults extends Reducer<Text, Text, Text, Text> {
       */    
       JsonArray minJsonArray = JsonArray.readFrom( value.toString() );
       JsonObject minJsonObject = minJsonArray.get(0).asObject();
-      
+
       outputResultsString.setLength(0);
       outputResultsString.append("STATE: " + minJsonObject.get("STATE") + ",");
       outputResultsString.append("AVG_TEMP: " + minJsonObject.get("AVG_TEMP") + ",");
@@ -39,7 +39,7 @@ public class ReducerOutResults extends Reducer<Text, Text, Text, Text> {
       outputResultsString.append("AVG_PRCP: " + minJsonObject.get("AVG_PRCP") + ",");
       outputResultsString.append("MAX_PRCP: " + minJsonObject.get("MAX_PRCP") + ",");
       outputResultsString.append("MAX_PRCP_MONTH: " + minJsonObject.get("MAX_PRCP_MONTH") + ",");
-      outputResultsString.append("MIN_PRCP" + minJsonObject.get("MIN_PRCP") + ",");
+      outputResultsString.append("MIN_PRCP: " + minJsonObject.get("MIN_PRCP") + ",");
       outputResultsString.append("MIN_PRCP_MONTH: " + minJsonObject.get("MIN_PRCP_MONTH"));
 
       //System.out.println("VALUES: " + outputResultsString.toString());
