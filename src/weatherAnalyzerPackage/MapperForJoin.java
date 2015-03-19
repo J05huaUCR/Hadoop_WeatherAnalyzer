@@ -18,7 +18,6 @@ public class MapperForJoin extends Mapper<LongWritable, Text, AnchorKey, Text> {
       //joinOrder = Integer.parseInt(context.getConfiguration().get(fileSplit.getPath().getName()));
   }
 
-  //@SuppressWarnings("unchecked")
   @Override
   protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
     String tempKey = "";
@@ -128,8 +127,6 @@ public class MapperForJoin extends Mapper<LongWritable, Text, AnchorKey, Text> {
       minJsonObject.add("MAX", valuesResult[17]);
       minJsonObject.add("MIN", valuesResult[18]);
       minJsonObject.add("PRCP", valuesResult[19]);
-   
-      //System.out.println("MAP RECORD:" + jsonData.toJSONString());
     } 
 
     /* Create minimalJSON Array to hold JSON object and output as string */
@@ -137,8 +134,6 @@ public class MapperForJoin extends Mapper<LongWritable, Text, AnchorKey, Text> {
     minJsonArray.add(minJsonObject);
     String jsonStringOutput = minJsonArray.toString();
     
-    
-    //System.out.println("MAP RECORD:" + jsonStringOutput);
     data.set(jsonStringOutput); // set data = to compiled data as String
     taggedKey.set(tempKey,joinOrder);
     context.write(taggedKey, data);

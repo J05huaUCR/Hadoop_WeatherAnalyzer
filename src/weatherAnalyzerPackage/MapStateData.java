@@ -22,7 +22,14 @@ public class MapStateData extends Mapper<LongWritable, Text, Text, Text> {
     
     if (line.length() > 0 && line.substring(0,1).equals("[") ) { // JSON string passed in
       
-      // [{"AVGPRCP":17.309917,"STATE":"AK","AVGTEMP":10.797153,"MONTH":1}]
+      /* [{"AVGPRCP":17.309917,"STATE":"AK","AVGTEMP":10.797153,"MONTH":1}]
+       * INPUT: 
+       * "STATE":"AK","MONTH":1,
+       * "AVGTEMP":6.099615,"MAXTEMP":52.1,"MAXTEMP_DATE":"20090118",
+       * "MINTEMP":-57.2,"MINTEMP_DATE":"20090108",
+       * "AVGPRCP":0.19740666,"MAXPRCP":6.4,"MAXPRCP_DATE":"20090119",
+       * "MINPRCP":0,"MINPRCP_DATE":"20090131"}
+       */
      
       /* Minimal JSON */
       JsonArray minJsonArray = JsonArray.readFrom( line );

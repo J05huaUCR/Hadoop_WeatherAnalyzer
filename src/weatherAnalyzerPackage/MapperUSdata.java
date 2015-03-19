@@ -92,11 +92,21 @@ public class MapperUSdata extends Mapper<LongWritable, Text, Text, Text> {
       } else {
         StationLocater findStation = new StationLocater();
         if (findStation.find(latitude, longitude) > 0) {
+          
           // Station found, update Json with values found
           minJsonObject.set("CTRY", findStation.getCountry());
           minJsonObject.set("STATE", findStation.getState());
           
-          if (findStation.getCountry().equals("US") ) {
+          // US, CQ, GQ, RM, WQ, UM, FM,PS,KT
+          if (findStation.getCountry().equals("US") || 
+              findStation.getCountry().equals("CQ") || 
+              findStation.getCountry().equals("GQ") || 
+              findStation.getCountry().equals("RM") || 
+              findStation.getCountry().equals("WQ") || 
+              findStation.getCountry().equals("UM") || 
+              findStation.getCountry().equals("FM") || 
+              findStation.getCountry().equals("PS") || 
+              findStation.getCountry().equals("KT") ) {
             // Assign values and output
             newKey.set(state + "-" + month);
             minJsonArray.set(0,minJsonObject); // update Json array

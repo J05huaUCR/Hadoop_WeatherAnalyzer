@@ -9,197 +9,13 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
-/**
-* http://codingjunkie.net/mapreduce-reduce-joins/
-* User: Bill Bejeck
-* Date: 6/11/13
-* Time: 9:27 PM
-* 
-*/
 
-/*
- * Project Summary:
- * For this project, we will have two datasets. The first provides station information 
- * for weather stations across the world. The second provides individual recordings for 
- * the stations over a 4-year period. The goal of the project is to find out which 
- * states in the US have the most stable temperature (i.e. their hottest month and 
- * coldest month have the least difference).
- * 
- * Formal Problem:
- * For stations within the United States, group the stations by state. For each state 
- * with readings, find the average temperature recorded for each month (ignoring year)
- * Find the months with the highest and lowest averages for that state. Order the 
- * states by the difference between the highest and lowest month average, ascending.
- * 
- * For each state, return:
- *    The state abbreviation, e.g. “CA”
- *    The average temperature and name of the highest month, e.g. “90, July”
- *    The average temperature and name of the lowest month, e.g. “50, January”
- *    The difference between the two, e.g. “40”
- *    
- * The fields are as follows:
- *    USAF = Air Force station ID. May contain a letter in the first position.
- *    WBAN = NCDC WBAN number
- *    STATION NAME = A text name for the station
- *    CTRY = FIPS country ID
- *    ST = State for US stations
- *    LAT = Latitude in thousandths of decimal degrees
- *    LON = Longitude in thousandths of decimal degrees
- *    ELEV = Elevation in meters
- *    BEGIN = Beginning Period Of Record (YYYYMMDD).
- *    END = Ending Period Of Record (YYYYMMDD).
- *    
- * Readings:
- *    STN---  = The station ID (USAF)
- *    WBAN   = NCDC WBAN number
- *    YEARMODA   = The datestamp
- *    TEMP = The average temperature for the day, followed by the number of recordings
- *    DEWP = Ignore for this project
- *    SLP = Ignore for this project
- *    STP = Ignore for this project
- *    VISIB = Ignore for this project (Visibility)
- *    WDSP = Ignore for this project
- *    MXSPD = Ignore for this project
- *    GUST = Ignore for this project    
- *    MAX = Ignore for this project (Max Temperature for the day)
- *    MIN = Ignore for this project (Min Temperature for the day)
- *    PRCP = Ignore for this project (Precipitation)
- *    NDP = Ignore for this project
- *    FRSHTT = Ignore for this project
- *    
- * Due Date:
- * This project will be due Thursday, March 19th before Midnight. 
- * Email me your submissions, one email per group.
- * 
- * Deliverables:
- *  [ ] A zipped file containing:
- *      [x] The script to run your job
- *      [ ] A README describing your project, including:
- *        [ ] Your usernames and node number.
- *        [ ] An overall description of how you chose to separate the 
- *           problem into different mapreduce jobs, with reasoning.
- *        [ ] A description of each mapreduce job including:
- *           [ ] What the job does 
- *           [ ] An estimate of runtime for the pass
- *        [ ] A description of how you chose to do the join(s)
- *        [ ] A description of anything you did extra for the project, 
- *           such as adding a combiner. If there is anything that you feel 
- *           deserves extra credit, put it here.
- *        [ ] All files needed for the script to run (Don’t include the 
- *           two original datasets).
- *           
- * The script should take as input three things: 
- *  [x] A folder containing the Locations file
- *  [x] A folder containing the Recordings files
- *  [x] An output folder
- *  
- *  I will provide these when I try to run your script. Please change 
- *  the hdfs interactions to be based on /user/sjaco002 before you submit 
- *  (it should be your own folder when you run it).
- *  
- * Think About:
- *  [x] There are different ways to do joins in mapreduce. What can you use 
- *      from the datasets to inform your decision (e.g. size)? Please Google 
- *      joins in mapreduce for more information
- *  [x] Make sure your parse correctly. One file is a csv, the other is not. 
- *      One file has a single row of Headers, the other has many.
- *  [x] How many passes should you do? How much work should each pass do?
- *  [x] Make sure to start early. The cluster will get slower as more people 
- *      use it. A single pass of the data took me about 2 minutes while the 
- *      cluster was empty.
- *    
- * Potential For Extra Credit:
- * Please feel free to try to beef up your project for extra credit. There 
- * are many ways that you can do this. Here are a few examples:
- *  [ ] A good use of combiners
- *  [ ] A clever way to achieve faster execution time
- *  [x] Enriching the data, e.g. including the average precipitation for the two months
- * 
- * Bigger Bonus:
- * [ ] Include the stations with “CTRY” as “US” that don’t have a state tag, 
- *    finding a way to estimate the state using a spatial distance with the 
- *    known stations. There are some stations that are Ocean Buoys so you may 
- *    want to have a maximum distance to be required in order to be included 
- *    in a state, or you could create a separate “state” representing the 
- *    “pacific” and “atlantic” ocean (Checked by using coordinates). 
- *    There is a lot of potential work here so the extra credit could be large).
- * 
- * Whatever you try to do let me know in your README. If you aren’t sure 
- * whether your idea is worth extra credit or not, just email me.
- *    
- * I've had a few people ask me questions about what the "correct" answer for this project is. 
- * There are a few pieces of variance on this project. For example:
- * 
- *    1. We have one station ID that corresponds to several stations. 
- *      Some groups are handling this in different ways
- *    2. Some students have different ideas of how to "correctly" calculate average. 
- *      This is okay. The important thing is that your results need to be correct 
- *      given the choices that you have made. For a general idea of what results 
- *      should look like, states like Utah, the Dakotas, and Minnesota should be near 
- *      the bottom of the least (High variance in temperature) whereas states like 
- *      Hawaii, California, and Puerto Rico should be near the top of the list (Stable 
- *      year-round temperatures).
- * 
- * A note on the values for precipitation (For EXTRA CREDIT ONLY):
- * A value of 99.99 means that there is no data (You can either treat these as 0 or 
- * exclude them from your calculations, though the latter is the more correct option).
- * 
- * There is a letter at the end of the recordings. Here is a table of what the letters mean 
- * (Basically the letter tells you how long the precipitation was accumulated before recording).
- * 
- *    A - 6 hours worth of precipitation
- *    B - 12 hours...
- *    C - 18 hours...
- *    D - 24 hours...
- *    E - 12 hours... (slightly different from B but the same for this project).
- *    F - 24 hours ... (slightly different from D but the same for this project).
- *    G - 24 hours ... (slightly different from D but the same for this project).
- *    H - station recorded a 0 for the day (although there was some recorded instance of precipitation).
- *    I - station recorded a 0 for the day (and there was NO recorded instance of precipitation).
- * 
- * How you treat these is up to you (just let me know in your README). A simple solution 
- * would be to multiply. For instance, if they recorded 12 hours worth of precipitation, 
- * multiply it by 2 to extrapolate 24 hours worth.
- * 
- * I didn't specifically say this, so please include in your report the output file 
- * from your run of your project. Should be a single file with 50-53 lines (Depending 
- * on if you count things like Puerto Rico as "states") with a schema similar to the 
- * following (You can add a header row if you would like):
- * 
- *    STATE - abbreviation of the state, "CA"
- *    HIGH MONTH NAME - month with the highest average, "JULY"
- *    AVERAGE FOR THAT MONTH - "73.668"
- *    **PRECIPITATION THAT MONTH
- *    LOW MONTH NAME - month with the lowest average, "DECEMBER"
- *    AVERAGE FOR THAT MONTH - "48.054"
- *    **PRECIPITATION THAT MONTH
- *    DIFFERENCE BETWEEN THE TWO - "25.614"
- *    
- *    **example of extra credit fields
- *    
- *    What's left:
-[x] Sort output
-[x] Add timers for each map/reduce phase
-[ ] Translate state ID to name and month number to month (easy, just haven't gotten to it yet.
-[ ] confirm the calculation of the temp ranges (right now, Puerto Rico shows a variance of ~1 degree?!!)
-[ ] batch script
-
-Extra credit:
-[ ] define lat/lon boundaries for the US + territories and filter and assign locations to stations that are not listed as US
-[ ] look at Combiners Partitioners to see if possible to accelerate execution 
-    (will use the base version to time and compare against
-[X] I am tracking precipitation already (i was already running similar code, just added it in)
-[ ] I think it would be fairly easy to track the min/max  temp, rainfall for /yearmonthdate 
-    with location to show the extremes for the state versus the average
-    
-    hdfs dfs -rm -r output
-    hdfs dfs -rm -r output_join
-    hdfs dfs -rm -r output_state_data
-    hdfs dfs -rm -r output_us_data
-    
- */
 public class WeatherAnalyzer {
   
   public static int deleteDirectory(String directoryName) {
@@ -221,8 +37,8 @@ public class WeatherAnalyzer {
     Configuration config = new Configuration();
        
     // Vars to hold parameter info
-    String readingsDir,stationsDir, joinDir, mapUSDir, mapStateDir, outputDir;
-    readingsDir = stationsDir = "";
+    String readingsDir,stationsDir, joinDir, mapUSDir, mapStateDir, outputDir, writeOut;
+    readingsDir = stationsDir = writeOut = "";
     joinDir = "output_join";
     mapUSDir = "output_us_data";
     mapStateDir = "output_state_data";
@@ -253,19 +69,27 @@ public class WeatherAnalyzer {
       }
     }
     
+    //create a temporary file
+    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+    File outputFile = new File("Timing_" + timeStamp + ".txt");
+    System.out.println(outputFile.getCanonicalPath());
+    BufferedWriter writeToOutput = null;
+    writeToOutput = new BufferedWriter(new FileWriter(outputFile));
+    writeToOutput.write("Weather Analyzer Timings:\n");
+    writeToOutput.write("------------------------------------\n");
+    
     /*
      *  clear previous passes if present
      
     deleteDirectory(joinDir);
     deleteDirectory(mapUSDir);
     deleteDirectory(mapStateDir);
-    deleteDirectory(outputDir);
-    */
+    deleteDirectory(outputDir);*/
     
-    /*
-     * Define ReduceJoin job
+    /* =========================================================================
+     * Job 1: Join Data Sets
      * Maps stations and readings, filtering data as necessary and then joining
-     */
+     * ========================================================================= */
     
     // Begin timer
     jobStartTime = System.nanoTime();
@@ -274,7 +98,6 @@ public class WeatherAnalyzer {
     Job joinDataSets = new Job(config, "Join");
     joinDataSets.setJarByClass(WeatherAnalyzer.class);
 
-    //FileInputFormat.addInputPaths(joinDataSets, filePaths.toString());
     FileInputFormat.addInputPaths(joinDataSets, filePaths);
     FileOutputFormat.setOutputPath(joinDataSets, new Path(joinDir));
 
@@ -285,22 +108,24 @@ public class WeatherAnalyzer {
     joinDataSets.setOutputKeyClass(AnchorKey.class);
     joinDataSets.setOutputValueClass(Text.class);
     if ( joinDataSets.waitForCompletion(true) ) {
-      
       jobEndTime = System.nanoTime();   
       jobDuration = (double) ((jobEndTime - jobStartTime) / NANO2SEC);  
-      System.out.print("Join completed in " + String.format("%.4f", jobDuration) + "secs.\n");
-    
+      writeOut = "Job 1: Join data sets completed in " + String.format("%.4f", jobDuration) + "secs.\n";
+      System.out.print(writeOut);
     } else {
-      System.err.print("Something went horribly wrong...\n");
+      writeOut = "Job 1: Something went horribly wrong...\n";
+      System.err.print(writeOut);
     }
-       
-    /*
+    writeToOutput.write(writeOut);
+     
+    /* =========================================================================
+     * Job 2: Map to US Data
      * Map results from previous run to consolidate by state, year/month, 
      * eliminating non-US results at this time
      * reduce to max/min values per month
-     *    
-     */ 
+     * ========================================================================= */
    
+    // Begin Timer
     jobStartTime = System.nanoTime();
     
     Configuration getStateDataConf = new Configuration();
@@ -324,17 +149,21 @@ public class WeatherAnalyzer {
 
       jobEndTime = System.nanoTime();   
       jobDuration = (double) ((jobEndTime - jobStartTime) / NANO2SEC);  
-      System.out.print("getStatesData completed in " + String.format("%.4f", jobDuration) + "secs.\n");
+      writeOut = "Job 2: Filter to US data completed in " + String.format("%.4f", jobDuration) + "secs.\n";
+      System.out.print(writeOut);
     
     } else {
-      System.err.println("Something went horribly wrong...");
+      System.err.println("Job 2: Something went horribly wrong...");
     }
-
-    /*
+    
+    writeToOutput.write(writeOut);
+   
+    /* =========================================================================
+     * Job 3: Map to States Data
      * Map results from previous run to consolidate by state, year/month, 
      * eliminating non-US results at this time
      * reduce to max/min values per month
-    */
+     * ========================================================================= */
     
     jobStartTime = System.nanoTime();
     
@@ -360,16 +189,21 @@ public class WeatherAnalyzer {
       
       jobEndTime = System.nanoTime();   
       jobDuration = (double) ((jobEndTime - jobStartTime) / NANO2SEC);  
-      System.out.print("compileData completed in " + String.format("%.4f", jobDuration) + "secs.\n");
+      writeOut = "Job 3: Compile to State Data completed in " + String.format("%.4f", jobDuration) + "secs.\n";
+      System.out.print(writeOut);
       
     } else {
-      System.err.println("Something went horribly wrong...");
+      writeOut = "Job 3: Something went horribly wrong...\n";
+      System.err.println(writeOut);
     }
-      
     
-    /*
+    writeToOutput.write(writeOut);
+    
+    /* =========================================================================
+     * Job 4: Output final results
      * Take output State data, map on temp difference and output results
-    */
+     * ========================================================================= */
+    
     jobStartTime = System.nanoTime();
     
     Configuration outputResulstsConf = new Configuration();
@@ -393,16 +227,27 @@ public class WeatherAnalyzer {
       
       jobEndTime = System.nanoTime();   
       jobDuration = (double) ((jobEndTime - jobStartTime) / NANO2SEC);  
-      System.out.print("outputResulstsConf completed in " + String.format("%.4f", jobDuration) + "secs.\n");
-      
-      endTime = System.nanoTime();   
-      duration = (double) ((endTime - startTime)/ NANO2SEC);
-      System.out.println();
-      System.out.println("Analysis complete in " + String.format("%.4f", duration) + "secs.");
-      
+      writeOut = "Job 4: Output final results completed in " + String.format("%.4f", jobDuration) + "secs.\n";
+      System.out.print(writeOut);
+       
     } else {
-      System.err.println("Something went horribly wrong...");
+      writeOut = "Job 4: Something went horribly wrong...\n";
+      System.err.println(writeOut);
     }
+    
+    writeToOutput.write(writeOut);
+    
+    
+    // End Program
+    endTime = System.nanoTime();   
+    duration = (double) ((endTime - startTime)/ NANO2SEC);
+    
+    writeOut = "\nAnalysis complete in " + String.format("%.4f", duration) + "secs.\n";
+    System.out.println();
+    System.out.println(writeOut);
+    
+    writeToOutput.write(writeOut);
+    writeToOutput.close();
     
   }
   
