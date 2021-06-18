@@ -1,2 +1,2 @@
-# CS236_W15
+# Hadoop_WeatherAnalyzer
 Weather Analyzer using MapReduce
